@@ -3,31 +3,20 @@
 #include <vector>
 using namespace std;
 
-string plus(int a, int b) {
+void multiply(string res, vector<string> val) {
 
 }
-
-string minus(int a, int b) {
-
-}
-
-string multiply(int a, int b) {
-
-}
-
-string divide(int a, int b) {
-
-}
-
 
 int main() {
 
     vector<string> val;
     
-    string in;
+    string in, res = 0;
     while(cin>>in && in != EOF) {
       val.add(in);
     }
+
+    multiply(res, val);
 
     return 0;
 }

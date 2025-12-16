@@ -16,7 +16,7 @@ string multiply(string &a, string &b) {
 
         int ia = a[i] - '0';
         for(int j = m - 1; j >= 0; j--) {
-
+            cout << ia << j << endl;
         }
     }
 

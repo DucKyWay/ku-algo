@@ -1,139 +1,172 @@
 #include <iostream>
 #include <vector>
-#include <cmath>
 using namespace std;
 
-// Return the next power of two greater than or equal to n
+typedef long long ll;
+typedef vector<vector<ll>> Matrix;
+
+// หาค่ากำลังสองของ 2 ที่ >= n
 int nextPowerOfTwo(int n) {
-    return pow(2, ceil(log2(n)));
+    int p = 1;
+    while (p < n) p <<= 1;
+    return p;
 }
 
-// Resize a matrix to newR x newC and 
-// fill extra space with zeros
-vector<vector<int>> resizeMatrix(vector<vector<int>> &mat, 
-                                        int newR, int newC) {
-                                            
-    vector<vector<int>> resized(newR, vector<int>(newC, 0));
-    for (int i = 0; i < mat.size(); ++i)
-        for (int j = 0; j < mat[0].size(); ++j)
-            resized[i][j] = mat[i][j];
-            
-    return resized;
+// matrix r x c = 0
+Matrix makeMatrix(int r, int c) {
+    return Matrix(r, vector<ll>(c, 0));
 }
 
-// Perform matrix addition or subtraction 
-// of size×size matrices
-// sign = 1 for addition, -1 for subtraction
-vector<vector<int>> add(vector<vector<int>> a, 
-            vector<vector<int>> b, int size, int sign = 1) {
-    vector<vector<int>> res(size, vector<int>(size));
-    for (int i = 0; i < size; i++)
-        for (int j = 0; j < size; j++)
-            res[i][j] = a[i][j] + sign * b[i][j];
-    return res;
+// + mat n x n
+Matrix addSquare(const Matrix &A, const Matrix &B) {
+    int n = (int)A.size();
+    Matrix C = makeMatrix(n, n);
+    for (int i = 0; i < n; ++i)
+        for (int j = 0; j < n; ++j)
+            C[i][j] = A[i][j] + B[i][j];
+    return C;
 }
 
-// Recursive implementation of Strassen's 
-// matrix multiplication
-// Assumes both matrices are size×size 
-// and size is a power of 2
-vector<vector<int>> strassen(vector<vector<int>> mat1, 
-                                    vector<vector<int>> mat2) {
-    int n = mat1.size();
-    
-    // Base case: 1×1 matrix multiplication
-    vector<vector<int>> res(n, vector<int>(n, 0));
+// - mat n x n
+Matrix subSquare(const Matrix &A, const Matrix &B) {
+    int n = (int)A.size();
+    Matrix C = makeMatrix(n, n);
+    for (int i = 0; i < n; ++i)
+        for (int j = 0; j < n; ++j)
+            C[i][j] = A[i][j] - B[i][j];
+    return C;
+}
+
+// Strassen n x n (n เป็น 2^k)
+Matrix strassen(const Matrix &A, const Matrix &B) {
+    int n = (int)A.size();
+    Matrix C = makeMatrix(n, n);
+
     if (n == 1) {
-        res[0][0] = mat1[0][0] * mat2[0][0];
-        return res;
+        C[0][0] = A[0][0] * B[0][0];
+        return C;
     }
 
-    // Split matrices into 4 submatrices
-    int newSize = n / 2;
-    vector<vector<int>> a11(newSize, vector<int>(newSize));
-    vector<vector<int>> a12(newSize, vector<int>(newSize));
-    vector<vector<int>> a21(newSize, vector<int>(newSize));
-    vector<vector<int>> a22(newSize, vector<int>(newSize));
-    vector<vector<int>> b11(newSize, vector<int>(newSize));
-    vector<vector<int>> b12(newSize, vector<int>(newSize));
-    vector<vector<int>> b21(newSize, vector<int>(newSize));
-    vector<vector<int>> b22(newSize, vector<int>(newSize));
+    int k = n / 2;
 
-    // Fill the submatrices
-    for (int i = 0; i < newSize; i++)
-        for (int j = 0; j < newSize; j++) {
-            a11[i][j] = mat1[i][j];
-            a12[i][j] = mat1[i][j + newSize];
-            a21[i][j] = mat1[i + newSize][j];
-            a22[i][j] = mat1[i + newSize][j + newSize];
-            b11[i][j] = mat2[i][j];
-            b12[i][j] = mat2[i][j + newSize];
-            b21[i][j] = mat2[i + newSize][j];
-            b22[i][j] = mat2[i + newSize][j + newSize];
+    Matrix A11 = makeMatrix(k, k), A12 = makeMatrix(k, k);
+    Matrix A21 = makeMatrix(k, k), A22 = makeMatrix(k, k);
+    Matrix B11 = makeMatrix(k, k), B12 = makeMatrix(k, k);
+    Matrix B21 = makeMatrix(k, k), B22 = makeMatrix(k, k);
+
+    for (int i = 0; i < k; ++i) {
+        for (int j = 0; j < k; ++j) {
+            A11[i][j] = A[i][j];
+            A12[i][j] = A[i][j + k];
+            A21[i][j] = A[i + k][j];
+            A22[i][j] = A[i + k][j + k];
+
+            B11[i][j] = B[i][j];
+            B12[i][j] = B[i][j + k];
+            B21[i][j] = B[i + k][j];
+            B22[i][j] = B[i + k][j + k];
         }
+    }
 
-    // Compute the 7 products using Strassen’s formulas
-    auto m1 = strassen(add(a11, a22, newSize), add(b11, b22, newSize));
-    auto m2 = strassen(add(a21, a22, newSize), b11);
-    auto m3 = strassen(a11, add(b12, b22, newSize, -1));
-    auto m4 = strassen(a22, add(b21, b11, newSize, -1));
-    auto m5 = strassen(add(a11, a12, newSize), b22);
-    auto m6 = strassen(add(a21, a11, newSize, -1), add(b11, b12, newSize));
-    auto m7 = strassen(add(a12, a22, newSize, -1), add(b21, b22, newSize));
+    Matrix M1 = strassen(addSquare(A11, A22), addSquare(B11, B22));
+    Matrix M2 = strassen(addSquare(A21, A22), B11);
+    Matrix M3 = strassen(A11, subSquare(B12, B22));
+    Matrix M4 = strassen(A22, subSquare(B21, B11));
+    Matrix M5 = strassen(addSquare(A11, A12), B22);
+    Matrix M6 = strassen(subSquare(A21, A11), addSquare(B11, B12));
+    Matrix M7 = strassen(subSquare(A12, A22), addSquare(B21, B22));
 
-    // Calculate result quadrants from m1...m7
-    auto c11 = add(add(m1, m4, newSize), add(m7, m5, newSize, -1), newSize);
-    auto c12 = add(m3, m5, newSize);
-    auto c21 = add(m2, m4, newSize);
-    auto c22 = add(add(m1, m3, newSize), add(m6, m2, newSize, -1), newSize);
+    Matrix C11 = addSquare(subSquare(addSquare(M1, M4), M5), M7);
+    Matrix C12 = addSquare(M3, M5);
+    Matrix C21 = addSquare(M2, M4);
+    Matrix C22 = addSquare(subSquare(addSquare(M1, M3), M2), M6);
 
-    // Combine result quadrants into final matrix
-    for (int i = 0; i < newSize; i++)
-        for (int j = 0; j < newSize; j++) {
-            res[i][j] = c11[i][j];
-            res[i][j + newSize] = c12[i][j];
-            res[i + newSize][j] = c21[i][j];
-            res[i + newSize][j + newSize] = c22[i][j];
+    for (int i = 0; i < k; ++i) {
+        for (int j = 0; j < k; ++j) {
+            C[i][j]       = C11[i][j];
+            C[i][j + k]   = C12[i][j];
+            C[i + k][j]   = C21[i][j];
+            C[i + k][j+k] = C22[i][j];
         }
+    }
 
-    return res;
+    return C;
 }
 
-// Multiply mat1 (n×m) and mat2 (m×q) 
-// using Strassen’s method
-vector<vector<int>> multiply(vector<vector<int>> &mat1, 
-                vector<vector<int>> &mat2) {
-    // Compute size of the smallest power of 2 ≥ max(n, m, q)
-    int n = mat1.size(), m = mat1[0].size(), q = mat2[0].size() ;
-    int size = nextPowerOfTwo(max(n, max(m, q)));
+// wrapper: รับเมทริกซ์ W (a x b), X (c x d) แล้วคูณด้วย Strassen (padding)
+Matrix multiplyStrassenRect(const Matrix &W, const Matrix &X) {
+    int a = (int)W.size();
+    int b = (int)W[0].size();
+    int c = (int)X.size();
+    int d = (int)X[0].size();
 
-    // Pad both matrices to size×size with zeros
-    vector<vector<int>> aPad = resizeMatrix(mat1, size, size);
-    vector<vector<int>> bPad = resizeMatrix(mat2, size, size);
+    // สมมติว่า b == c แล้ว (เช็คใน main)
+    int n = nextPowerOfTwo(a);
+    if (n < b) n = nextPowerOfTwo(b);
+    if (n < d) n = nextPowerOfTwo(d);
 
-    // Perform Strassen multiplication on padded matrices
-    vector<vector<int>> cPad = strassen(aPad, bPad);
+    Matrix A_pad = makeMatrix(n, n);
+    Matrix B_pad = makeMatrix(n, n);
 
-    // Extract the valid n×q result from the padded result
-    vector<vector<int>> C(n, vector<int>(q));
-    for (int i = 0; i < n; i++)
-        for (int j = 0; j < q; j++)
-            C[i][j] = cPad[i][j];
+    // W -> A_pad
+    for (int i = 0; i < a; ++i)
+        for (int j = 0; j < b; ++j)
+            A_pad[i][j] = W[i][j];
 
-    return C ;
+    // X -> B_pad
+    for (int i = 0; i < c; ++i)
+        for (int j = 0; j < d; ++j)
+            B_pad[i][j] = X[i][j];
+
+    Matrix C_pad = strassen(A_pad, B_pad);
+
+    // ตัดเหลือ a x d
+    Matrix C = makeMatrix(a, d);
+    for (int i = 0; i < a; ++i)
+        for (int j = 0; j < d; ++j)
+            C[i][j] = C_pad[i][j];
+
+    return C;
 }
 
 int main() {
-    vector<vector<int>> mat1 = {{1, 2, 3}, {4, 5, 6}};
-    vector<vector<int>> mat2 = {{7, 8}, {9, 10}, {11, 12}};
+    ios::sync_with_stdio(false);
+    cin.tie(0);
 
-    vector<vector<int>> res = multiply(mat1, mat2);
+    int a, b, c, d;
+    if (!(cin >> a >> b >> c >> d)) return 0;
 
-    for (auto &row : res) {
-        for (int val : row) {
-            cout << val << " " ;
-        }
-        cout << endl;
+    if (b != c) {
+        cout << "IMPOSSIBLE\n";
+        return 0;
+    }
+
+    Matrix W = makeMatrix(a, b);
+    Matrix X = makeMatrix(c, d);
+
+    for (int i = 0; i < a; ++i)
+        for (int j = 0; j < b; ++j)
+            cin >> W[i][j];
+
+    for (int i = 0; i < c; ++i)
+        for (int j = 0; j < d; ++j)
+            cin >> X[i][j];
+
+    Matrix Y = multiplyStrassenRect(W, X);  // a x d size
+
+    // คัดกรองผู้ป่วย: col 1 คน (= d คน)
+    for (int col = 0; col < d; ++col) {
+        ll sum = 0;
+        for (int row = 0; row < a; ++row)
+            sum += Y[row][col];
+
+        double avg = (double)sum / (double)a;
+        double yi = avg;
+
+        if (yi > 0.0)
+            cout << "y[" << col << "] is positive\n";
+        else
+            cout << "y[" << col << "] is negative\n";
     }
 
     return 0;

@@ -1,6 +1,6 @@
 #include <iostream>
 #include <vector>
-
+#include <climits>
 using namespace std;
 
 int max(int a, int b) {
@@ -12,26 +12,26 @@ int main() {
     ios::sync_with_stdio(0);
     cin.tie(0);
 
-    int n;
+    long long n;
     cin >> n;
 
-    vector<int> p(n + 1);
+    vector<long long> p(n + 1);
     for (int i = 1; i <= n; i++) cin >> p[i];
 
-    int NEG = -1000000000;
+    long long NEG = LLONG_MIN / 4; // - infinity
 
-    int dp0 = 0; // max past not warp
-    int dp1 = NEG; // max past warp
-    int prev = 0; // p[i-1]
+    long long dp0 = 0; // max past not warp
+    long long dp1 = NEG; // max past warp
+    long long prev = 0; // p[i-1]
 
     for (int i = 1; i <= n; i++) {
-        int new0, new1;
+        long long new0, new1;
 
         if (i == 1) {
             new0 = dp0 + p[i];
         } else {
-            int candA = dp0 + p[i];
-            int candB = dp1 + prev * p[i];
+            long long candA = dp0 + p[i];
+            long long candB = dp1 + prev * p[i];
             new0 = max(candA, candB);
         }
 

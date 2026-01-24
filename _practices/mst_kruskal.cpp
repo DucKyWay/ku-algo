@@ -7,7 +7,6 @@ struct DSU {
 };
 
 int find(int i, DSU &dsu) {
-    // return (dsu.parent[i] == i) ? i : (dsu.parent[i] = find(dsu.parent[i], dsu));
     if(dsu.parent[i] == i) {
         return i;
     } else {
@@ -19,17 +18,18 @@ int find(int i, DSU &dsu) {
 void unite(int x, int y, DSU &dsu) {
     int s1 = find(x, dsu), s2 = find(y, dsu);
     if(s1 != s2) {
-        if(dsu.rank[s1] < dsu.rank[s2]) dsu.parent[s1] = s2;
-        else if(dsu.rank[s1] > dsu.rank[s2]) dsu.parent[s2] = s1;
-        else dsu.parent[s2] = s1, dsu.rank[s1]++;
+        if(dsu.rank[s1] < dsu.rank[s2]) 
+            dsu.parent[s1] = s2;
+        else if(dsu.rank[s1] > dsu.rank[s2]) 
+            dsu.parent[s2] = s1;
+        else 
+            dsu.parent[s2] = s1, dsu.rank[s1]++;
     }
 }
 
 bool comparator(vector<int> &a, vector<int> &b) {
     return a[2] < b[2];
 }
-
-/* ===== Kruskal ===== */
 
 int kruskal(int V, vector<vector<int>> &edges) {
 

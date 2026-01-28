@@ -18,7 +18,8 @@ int main() {
 
     vector<vector<int>> memories;
     int p, x, z; // ความทรงจำ, ตำแหน่งในสมอง? หรอ
-    while(cin >> p >> x >> z) memories.push_back({p, x, z});
+    while(cin >> p >> x >> z) 
+        memories.push_back({p, x, z});
 
     int n = memories.size();
     int m = 3;
